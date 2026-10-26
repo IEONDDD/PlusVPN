@@ -1,6 +1,25 @@
-# PlusVPN
+<p align="center">
+  <img src="branding/plusvpn-icon.png" width="140" alt="PlusVPN" />
+</p>
 
-Android VPN-клиент на Flutter (Dart) и Kotlin. Версия исходников **1.1.0+2**. VPN-ядро: `flutter_v2ray_client: 3.5.0` / Xray 26.9.9.
+<h1 align="center">PlusVPN</h1>
+
+<p align="center">
+  Android VPN-клиент на Flutter (Dart) и Kotlin на базе Xray core.
+</p>
+
+<p align="center">
+  <a href="https://t.me/OnPlusVPN">
+    <img src="https://img.shields.io/badge/Telegram-Канал_с_обновлениями-0088cc?logo=telegram&logoColor=white" alt="Telegram" />
+  </a>
+  <a href="https://github.com/IEONDDD/PlusVPN/releases/latest">
+    <img src="https://img.shields.io/github/v/release/IEONDDD/PlusVPN?color=0088cc&logo=github&logoColor=white&label=Release" alt="Release" />
+  </a>
+</p>
+
+---
+
+Версия исходников **1.1.0+2**. VPN-ядро: `flutter_v2ray_client: 3.5.0` / Xray 26.9.9.
 
 ## Оформление
 
