@@ -15,6 +15,7 @@ import android.service.quicksettings.TileService
 import dev.amirzr.flutter_v2ray_client.v2ray.V2rayController
 import dev.amirzr.flutter_v2ray_client.v2ray.core.V2rayCoreManager
 import dev.amirzr.flutter_v2ray_client.v2ray.utils.AppConfigs
+import dev.amirzr.flutter_v2ray_client.v2ray.utils.Utilities
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -70,11 +71,14 @@ object VpnBridge {
         val config = args["config"] as? String ?: ""
         if (config.isNotEmpty()) JSONObject(config)
         val packages = args["excludedApps"] as? List<*> ?: emptyList<String>()
+        val included = args["includedApps"] as? List<*> ?: emptyList<String>()
         check(prefs(c).edit()
             .putString("flutter.last_vpn_config", config)
             .putString("flutter.selected_server_id", args["id"] as? String)
             .putString("flutter.selected_server_label", args["label"] as? String ?: "PlusVPN")
-            .putString("flutter.excluded_apps_json", JSONArray(packages).toString()).commit()) { "Не удалось сохранить профиль" }
+            .putString("flutter.excluded_apps_json", JSONArray(packages).toString())
+            .putBoolean("flutter.include_only", args["includeOnly"] == true)
+            .putString("flutter.included_apps_json", JSONArray(included).toString()).commit()) { "Не удалось сохранить профиль" }
         refreshTile(c)
     }
 
@@ -109,12 +113,20 @@ object VpnBridge {
         val excluded = JSONArray(p.getString("flutter.excluded_apps_json", "[]"))
         val packages = ArrayList<String>()
         for (i in 0 until excluded.length()) packages.add(excluded.getString(i))
+        val includeOnly = p.getBoolean("flutter.include_only", false)
+        val selected = if (includeOnly) {
+            val included = JSONArray(p.getString("flutter.included_apps_json", "[]"))
+            ArrayList<String>().apply { for (i in 0 until included.length()) add(included.getString(i)) }
+        } else packages
+        check(!includeOnly || selected.any { it.isNotBlank() && it != c.packageName }) { "Выберите хотя бы одно приложение для VPN" }
         starting = true
         val token = ++generation
         try {
-            V2rayController.changeConnectionMode(AppConfigs.V2RAY_CONNECTION_MODES.VPN_TUN)
-            V2rayController.StartV2ray(c, label(c), config, packages, null)
-            check(AppConfigs.V2RAY_CONFIG != null) { "Ядро отклонило конфигурацию" }
+            AppConfigs.V2RAY_CONNECTION_MODE = AppConfigs.V2RAY_CONNECTION_MODES.VPN_TUN
+            AppConfigs.V2RAY_CONFIG = checkNotNull(Utilities.parseV2rayJsonFile(label(c), config, packages, null)) { "Ядро отклонило конфигурацию" }
+            val intent = Intent(c, PlusVpnService::class.java).setAction(PlusVpnService.ACTION_START)
+                .putExtra("INCLUDE_ONLY", includeOnly).putStringArrayListExtra("SELECTED_APPS", selected)
+            if (Build.VERSION.SDK_INT >= 26) c.startForegroundService(intent) else c.startService(intent)
         } catch (e: Exception) {
             starting = false
             throw e
@@ -125,7 +137,7 @@ object VpnBridge {
                 starting = false
                 if (!V2rayCoreManager.getInstance().isV2rayCoreRunning) {
                     error = "Не удалось запустить Xray. Проверьте ключ и параметры сервера."
-                    V2rayController.StopV2ray(c)
+                    c.stopService(Intent(c, PlusVpnService::class.java))
                 }
                 refreshTile(c)
             }
@@ -136,8 +148,23 @@ object VpnBridge {
         ++generation
         starting = false
         stopping = V2rayCoreManager.getInstance().isV2rayCoreRunning
-        V2rayController.StopV2ray(c)
+        if (!c.stopService(Intent(c, PlusVpnService::class.java))) onServiceStopped(c)
         uploadSpeed = 0; downloadSpeed = 0
+        refreshTile(c)
+    }
+
+    fun reportFailure(c: Context, message: String) {
+        error = message
+        starting = false
+        refreshTile(c)
+    }
+
+    fun onServiceStopped(c: Context) {
+        ++generation
+        starting = false; stopping = false; startedAt = 0
+        uploadSpeed = 0; downloadSpeed = 0
+        AppConfigs.V2RAY_STATE = AppConfigs.V2RAY_STATES.V2RAY_DISCONNECTED
+        prefs(c).edit().putBoolean("flutter.vpn_connected", false).apply()
         refreshTile(c)
     }
 

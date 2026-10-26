@@ -23,7 +23,7 @@ class PlusVisuals extends ThemeExtension<PlusVisuals> {
 extension PlusContext on BuildContext {
   PlusVisuals get visuals =>
       Theme.of(this).extension<PlusVisuals>() ??
-      const PlusVisuals(style: InterfaceStyle.liquidGlass, opacity: .06);
+      const PlusVisuals(style: InterfaceStyle.materialYou, opacity: .06);
   bool get isGlass => visuals.glass;
 }
 
@@ -39,6 +39,8 @@ ThemeData buildPlusTheme(ColorScheme colors, AppSettings settings) {
     useMaterial3: true,
     colorScheme: colors,
     brightness: colors.brightness,
+    fontFamily: settings.font.family,
+    fontFamilyFallback: settings.font.fallbackFamilies,
   );
   return base.copyWith(
     extensions: [

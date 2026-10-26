@@ -25,11 +25,14 @@
             <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
             <meta-data android:name="android.service.quicksettings.ACTIVE_TILE" android:value="true" />
         </service>
-        <service android:name="dev.amirzr.flutter_v2ray_client.v2ray.services.V2rayVPNService"
-            tools:remove="android:process">
-            <meta-data android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON" android:value="false" tools:replace="android:value" />
+        <service android:name=".PlusVpnService" android:enabled="true" android:exported="false"
+            android:foregroundServiceType="specialUse" android:permission="android.permission.BIND_VPN_SERVICE">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="vpn" />
+            <intent-filter><action android:name="android.net.VpnService" /></intent-filter>
+            <meta-data android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON" android:value="false" />
         </service>
-        <service android:name="dev.amirzr.flutter_v2ray_client.v2ray.services.V2rayProxyOnlyService" tools:remove="android:process" />
+        <service android:name="dev.amirzr.flutter_v2ray_client.v2ray.services.V2rayVPNService" tools:node="remove" />
+        <service android:name="dev.amirzr.flutter_v2ray_client.v2ray.services.V2rayProxyOnlyService" tools:node="remove" />
         <meta-data android:name="flutterEmbedding" android:value="2" />
     </application>
     <queries>

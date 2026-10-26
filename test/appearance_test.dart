@@ -36,7 +36,7 @@ void main() {
           state.settings.dynamicColors = false;
           await tester.pumpWidget(PlusVpnApp(state: state));
           await tester.pumpAndSettle();
-          expect(find.text('PLUSVPN'), findsOneWidget);
+          expect(find.byKey(const Key('brand-wordmark')), findsOneWidget);
           expect(
             find.byType(BackdropFilter),
             style == InterfaceStyle.liquidGlass ? findsWidgets : findsNothing,
@@ -114,7 +114,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byType(SelectionField<InterfaceStyle>));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Material You'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Material You'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(state.settings.interfaceStyle, InterfaceStyle.materialYou);
       expect(state.settings.dynamicColors, isTrue);

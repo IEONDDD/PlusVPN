@@ -152,9 +152,43 @@ class Subscription {
 
 enum InterfaceStyle { liquidGlass, materialYou }
 
+enum AppRoutingMode { exclude, include }
+
+enum AppFont { inter, dynaPuff, nunito, rubikOne, comfortaa, system }
+
+extension AppFontDetails on AppFont {
+  String get label => switch (this) {
+    AppFont.inter => 'Inter · по умолчанию',
+    AppFont.dynaPuff => 'DynaPuff · пухлый',
+    AppFont.nunito => 'Nunito · мягкий',
+    AppFont.rubikOne => 'Rubik One · тяжёлый',
+    AppFont.comfortaa => 'Comfortaa · геометрический',
+    AppFont.system => 'Системный',
+  };
+  String? get family => switch (this) {
+    AppFont.inter => 'PlusInter',
+    AppFont.dynaPuff => 'PlusDynaPuff',
+    AppFont.nunito => 'PlusNunito',
+    AppFont.rubikOne => 'PlusRubikOne',
+    AppFont.comfortaa => 'PlusComfortaa',
+    AppFont.system => null,
+  };
+  List<String> get fallbackFamilies => this == AppFont.dynaPuff
+      ? const ['PlusRubikOne', 'PlusInter']
+      : const ['PlusInter'];
+  FontWeight get brandWeight => switch (this) {
+    AppFont.rubikOne => FontWeight.w400,
+    AppFont.dynaPuff => FontWeight.w700,
+    _ => FontWeight.w800,
+  };
+}
+
 class AppSettings {
-  InterfaceStyle interfaceStyle = InterfaceStyle.liquidGlass;
-  bool dynamicColors = true, wallpaperColors = false, showWord = true;
+  InterfaceStyle interfaceStyle = InterfaceStyle.materialYou;
+  AppFont font = AppFont.inter;
+  double uiScale = .90;
+  AppRoutingMode appRoutingMode = AppRoutingMode.exclude;
+  bool dynamicColors = true, wallpaperColors = false, showWord = false;
   bool perApp = false, bypassLan = true;
   int accent = 0xffc1e899;
   String subtitle = 'PlusVPN', greeting = '', word = 'breathe', dns = '1.1.1.1';
@@ -163,8 +197,12 @@ class AppSettings {
   double blur = 12, opacity = .06;
   ThemeMode theme = ThemeMode.dark;
   List<String> excludedApps = [];
+  List<String> includedApps = [];
   Map<String, dynamic> toJson() => {
     'interfaceStyle': interfaceStyle.name,
+    'font': font.name,
+    'uiScale': uiScale,
+    'appRoutingMode': appRoutingMode.name,
     'dynamicColors': dynamicColors,
     'wallpaperColors': wallpaperColors,
     'showWord': showWord,
@@ -181,16 +219,26 @@ class AppSettings {
     'opacity': opacity,
     'theme': theme.name,
     'excludedApps': excludedApps,
+    'includedApps': includedApps,
   };
   factory AppSettings.fromJson(Map<String, dynamic> j) {
     final s = AppSettings();
     s.interfaceStyle = InterfaceStyle.values.firstWhere(
       (e) => e.name == j['interfaceStyle'],
-      orElse: () => InterfaceStyle.liquidGlass,
+      orElse: () => InterfaceStyle.materialYou,
+    );
+    s.font = AppFont.values.firstWhere(
+      (e) => e.name == j['font'],
+      orElse: () => AppFont.inter,
+    );
+    s.uiScale = (j['uiScale'] as num? ?? .90).toDouble().clamp(.8, 1.2);
+    s.appRoutingMode = AppRoutingMode.values.firstWhere(
+      (e) => e.name == j['appRoutingMode'],
+      orElse: () => AppRoutingMode.exclude,
     );
     s.dynamicColors = j['dynamicColors'] ?? true;
     s.wallpaperColors = j['wallpaperColors'] ?? false;
-    s.showWord = j['showWord'] ?? true;
+    s.showWord = j['showWord'] ?? false;
     s.perApp = j['perApp'] ?? false;
     s.bypassLan = j['bypassLan'] ?? true;
     s.accent = j['accent'] ?? s.accent;
@@ -209,6 +257,7 @@ class AppSettings {
       orElse: () => ThemeMode.dark,
     );
     s.excludedApps = List<String>.from(j['excludedApps'] ?? []);
+    s.includedApps = List<String>.from(j['includedApps'] ?? []);
     return s;
   }
   AppSettings();

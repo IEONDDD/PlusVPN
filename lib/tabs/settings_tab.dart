@@ -17,6 +17,7 @@ class SettingsTab extends StatefulWidget {
 
 class _SettingsTabState extends State<SettingsTab> {
   bool _loadingImage = false;
+  double? _pendingScale;
   AppState get state => widget.state;
   @override
   void initState() {
@@ -81,7 +82,10 @@ class _SettingsTabState extends State<SettingsTab> {
     try {
       final apps = await state.engine.installedApps();
       if (!mounted) return;
-      final selected = state.settings.excludedApps.toSet();
+      final include = state.settings.appRoutingMode == AppRoutingMode.include;
+      final selected =
+          (include ? state.settings.includedApps : state.settings.excludedApps)
+              .toSet();
       var query = '';
       final result = await showPlusDialog<List<String>>(
         context: context,
@@ -95,7 +99,7 @@ class _SettingsTabState extends State<SettingsTab> {
                 )
                 .toList();
             return PlusDialog(
-              title: const Text('В обход VPN'),
+              title: Text(include ? 'Приложения через VPN' : 'В обход VPN'),
               content: SizedBox(
                 width: 460,
                 height: MediaQuery.sizeOf(ctx).height * .4,
@@ -151,7 +155,13 @@ class _SettingsTabState extends State<SettingsTab> {
         ),
       );
       if (result != null) {
-        await state.updateSettings((s) => s.excludedApps = result);
+        await state.updateSettings((s) {
+          if (include) {
+            s.includedApps = result;
+          } else {
+            s.excludedApps = result;
+          }
+        });
       }
     } catch (_) {
       if (mounted) {
@@ -355,40 +365,106 @@ class _SettingsTabState extends State<SettingsTab> {
             ],
           ),
         ]),
-        if (context.isGlass)
-          _section('Ваш фон', [
-            Wrap(
-              spacing: 8,
-              children: [
-                FilledButton.tonalIcon(
-                  onPressed: _loadingImage ? null : _pickImage,
-                  icon: const Icon(Icons.photo_outlined),
-                  label: Text(_loadingImage ? 'Загрузка…' : 'Из галереи'),
-                ),
-                TextButton(
-                  onPressed: s.wallpaper == null
-                      ? null
-                      : () async {
-                          final old = s.wallpaper;
-                          await state.updateSettings((s) => s.wallpaper = null);
-                          if (old != null && File(old).existsSync()) {
-                            await File(old).delete();
-                          }
-                        },
-                  child: const Text('Сбросить'),
-                ),
-              ],
+        _section('Шрифт', [
+          SelectionField<AppFont>(
+            label: 'Шрифт интерфейса',
+            value: s.font,
+            options: AppFont.values
+                .map(
+                  (font) => SelectionOption(
+                    font,
+                    font.label,
+                    textStyle: TextStyle(
+                      fontFamily: font.family ?? 'Roboto',
+                      fontFamilyFallback: font.fallbackFamilies,
+                      fontSize: 16,
+                      fontWeight: font == AppFont.rubikOne
+                          ? FontWeight.w400
+                          : FontWeight.w600,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (font) => state.updateSettings((s) => s.font = font),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'PlusVPN',
+            style: TextStyle(
+              fontFamily: s.font.family,
+              fontFamilyFallback: s.font.fallbackFamilies,
+              fontWeight: s.font.brandWeight,
+              fontSize: 28,
             ),
-            const SizedBox(height: 14),
-            Text('Размытие: ${s.blur.round()}'),
-            Slider(
-              value: s.blur,
-              min: 0,
-              max: 40,
-              divisions: 40,
-              label: '${s.blur.round()}',
-              onChanged: (v) => state.updateSettings((s) => s.blur = v),
-            ),
+          ),
+          const SizedBox(height: 8),
+          const Text('Ваше соединение. Ваш стиль.'),
+        ]),
+        _section('Размер интерфейса', [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Масштаб: ${((_pendingScale ?? s.uiScale) * 100).round()}%',
+                ),
+              ),
+              TextButton(
+                onPressed: () => state.updateSettings((s) => s.uiScale = 1),
+                child: const Text('100%'),
+              ),
+            ],
+          ),
+          Slider(
+            value: _pendingScale ?? s.uiScale,
+            min: .8,
+            max: 1.2,
+            divisions: 8,
+            label: '${((_pendingScale ?? s.uiScale) * 100).round()}%',
+            onChanged: (v) => setState(() => _pendingScale = v),
+            onChangeEnd: (v) {
+              state.updateSettings((s) => s.uiScale = v);
+              setState(() => _pendingScale = null);
+            },
+          ),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [Text('Меньше'), Text('Крупнее')],
+          ),
+        ]),
+        _section('Ваш фон', [
+          Wrap(
+            spacing: 8,
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: _loadingImage ? null : _pickImage,
+                icon: const Icon(Icons.photo_outlined),
+                label: Text(_loadingImage ? 'Загрузка…' : 'Из галереи'),
+              ),
+              TextButton(
+                onPressed: s.wallpaper == null
+                    ? null
+                    : () async {
+                        final old = s.wallpaper;
+                        await state.updateSettings((s) => s.wallpaper = null);
+                        if (old != null && File(old).existsSync()) {
+                          await File(old).delete();
+                        }
+                      },
+                child: const Text('Сбросить'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text('Размытие: ${s.blur.round()}'),
+          Slider(
+            value: s.blur,
+            min: 0,
+            max: 40,
+            divisions: 40,
+            label: '${s.blur.round()}',
+            onChanged: (v) => state.updateSettings((s) => s.blur = v),
+          ),
+          if (context.isGlass) ...[
             Text('Непрозрачность карточек: ${(s.opacity * 100).round()}%'),
             Slider(
               value: s.opacity,
@@ -398,7 +474,8 @@ class _SettingsTabState extends State<SettingsTab> {
               label: '${(s.opacity * 100).round()}%',
               onChanged: (v) => state.updateSettings((s) => s.opacity = v),
             ),
-          ]),
+          ],
+        ]),
         _section('Слова на главной', [
           _text('Подзаголовок', s.subtitle, (s, v) => s.subtitle = v),
           _text(
@@ -461,17 +538,51 @@ class _SettingsTabState extends State<SettingsTab> {
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Per-App Proxy'),
-            subtitle: const Text('Выбранные приложения идут в обход VPN'),
+            subtitle: const Text('Настроить, какие приложения используют VPN'),
             value: s.perApp,
             onChanged: (v) => state.updateSettings((s) => s.perApp = v),
           ),
+          if (s.perApp) ...[
+            SelectionField<AppRoutingMode>(
+              label: 'Режим приложений',
+              value: s.appRoutingMode,
+              options: const [
+                SelectionOption(
+                  AppRoutingMode.exclude,
+                  'Выбранные обходят VPN',
+                  subtitle: 'Все остальные используют VPN',
+                  icon: Icons.call_split_rounded,
+                ),
+                SelectionOption(
+                  AppRoutingMode.include,
+                  'VPN только для выбранных',
+                  subtitle: 'Все остальные выходят напрямую',
+                  icon: Icons.verified_user_outlined,
+                ),
+              ],
+              onChanged: (mode) =>
+                  state.updateSettings((s) => s.appRoutingMode = mode),
+            ),
+            if (s.appRoutingMode == AppRoutingMode.include &&
+                s.includedApps.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: Text(
+                  'Выберите хотя бы одно приложение для подключения.',
+                ),
+              ),
+          ],
           ListTile(
             enabled: s.perApp,
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.apps),
-            title: const Text('Исключённые приложения'),
+            title: Text(
+              s.appRoutingMode == AppRoutingMode.include
+                  ? 'Приложения через VPN'
+                  : 'Исключённые приложения',
+            ),
             subtitle: Text(
-              'Выбрано: ${s.excludedApps.length} · приложения с ярлыком',
+              'Выбрано: ${s.appRoutingMode == AppRoutingMode.include ? s.includedApps.length : s.excludedApps.length} · приложения с ярлыком',
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: s.perApp ? _chooseApps : null,
@@ -479,7 +590,7 @@ class _SettingsTabState extends State<SettingsTab> {
         ]),
         const Center(
           child: Text(
-            'PLUSVPN · 1.1.0',
+            'PLUSVPN · 1.2.0',
             style: TextStyle(fontSize: 11, letterSpacing: 2),
           ),
         ),

@@ -14,7 +14,17 @@ class VpnEngine {
         'id': server?.id,
         'label': server?.label ?? 'PlusVPN',
         'config': server == null ? '' : ConfigBuilder.build(server, settings),
-        'excludedApps': settings.perApp ? settings.excludedApps : <String>[],
+        'excludedApps':
+            settings.perApp && settings.appRoutingMode == AppRoutingMode.exclude
+            ? settings.excludedApps
+            : <String>[],
+        'includeOnly':
+            settings.perApp &&
+            settings.appRoutingMode == AppRoutingMode.include,
+        'includedApps':
+            settings.perApp && settings.appRoutingMode == AppRoutingMode.include
+            ? settings.includedApps
+            : <String>[],
       });
   Future<bool> prepare() async =>
       await channel.invokeMethod<bool>('prepare') ?? false;

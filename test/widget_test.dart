@@ -15,7 +15,7 @@ void main() {
       final state = AppState();
       await tester.pumpWidget(PlusVpnApp(state: state));
       await tester.pumpAndSettle();
-      expect(find.text('PLUSVPN'), findsOneWidget);
+      expect(find.byKey(const Key('brand-wordmark')), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.tap(find.text('Серверы'));
       await tester.pumpAndSettle();

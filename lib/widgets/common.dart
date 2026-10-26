@@ -30,41 +30,48 @@ class AppSurface extends StatelessWidget {
     }
     final dark = colors.brightness == Brightness.dark;
     final opacity = context.visuals.opacity;
-    return ClipRRect(
-      borderRadius: border,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: modal ? 28 : 18,
-          sigmaY: modal ? 28 : 18,
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: border,
-            color: modal
-                ? (dark ? const Color(0xff10161c) : Colors.white).withValues(
-                    alpha: dark ? .24 : .32,
-                  )
-                : null,
-            gradient: modal
-                ? null
-                : LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withValues(alpha: opacity + .035),
-                      colors.primary.withValues(alpha: opacity * .22),
-                      Colors.white.withValues(alpha: opacity * .30),
-                    ],
-                    stops: const [0, .55, 1],
-                  ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: dark ? .17 : .52),
-              width: .8,
-            ),
+    final baseColor = modal
+        ? (dark ? const Color(0xff10161c) : Colors.white).withValues(
+            alpha: dark ? .28 : .36,
+          )
+        : (dark ? const Color(0xff0c131a) : Colors.white).withValues(
+            alpha: dark
+                ? (.12 + opacity * .6).clamp(0.12, 0.40)
+                : (.18 + opacity * .6).clamp(0.18, 0.48),
+          );
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: border,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: modal ? 20 : 12,
+            sigmaY: modal ? 20 : 12,
           ),
-          child: Material(
-            type: MaterialType.transparency,
-            child: Padding(padding: padding, child: child),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: border,
+              color: baseColor,
+              gradient: modal
+                  ? null
+                  : LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: opacity + .05),
+                        colors.primary.withValues(alpha: opacity * .25),
+                        Colors.white.withValues(alpha: opacity * .20),
+                      ],
+                      stops: const [0, .55, 1],
+                    ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: dark ? .17 : .52),
+                width: .8,
+              ),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Padding(padding: padding, child: child),
+            ),
           ),
         ),
       ),
@@ -137,11 +144,18 @@ class PlusDialog extends StatelessWidget {
 }
 
 class SelectionOption<T> {
-  const SelectionOption(this.value, this.title, {this.subtitle, this.icon});
+  const SelectionOption(
+    this.value,
+    this.title, {
+    this.subtitle,
+    this.icon,
+    this.textStyle,
+  });
   final T value;
   final String title;
   final String? subtitle;
   final IconData? icon;
+  final TextStyle? textStyle;
 }
 
 Future<T?> showPlusDialog<T>({
@@ -221,10 +235,12 @@ class SelectionField<T> extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         selected?.title ?? '',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style:
+                            selected?.textStyle ??
+                            const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -327,7 +343,7 @@ Future<T?> showSelectionSheet<T>(
                           leading: option.icon == null
                               ? null
                               : Icon(option.icon),
-                          title: Text(option.title),
+                          title: Text(option.title, style: option.textStyle),
                           subtitle: option.subtitle == null
                               ? null
                               : Text(option.subtitle!),

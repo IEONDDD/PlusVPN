@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../app_state.dart';
+import '../models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
-import '../widgets/plus_logo.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key, required this.state});
@@ -46,14 +46,17 @@ class HomeTab extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    PlusLogo(size: 30, color: color.primary),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'PLUSVPN',
+                    Text(
+                      'PlusVPN',
+                      key: const Key('brand-wordmark'),
                       style: TextStyle(
-                        letterSpacing: 5,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontFamily: state.settings.font.family,
+                        fontFamilyFallback:
+                            state.settings.font.fallbackFamilies,
+                        letterSpacing: -.8,
+                        fontSize: 28,
+                        fontWeight: state.settings.font.brandWeight,
+                        color: color.onSurface,
                       ),
                     ),
                     const Spacer(),

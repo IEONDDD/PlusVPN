@@ -259,6 +259,11 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     if (selected == null) {
       throw const FormatException('Сначала добавьте сервер');
     }
+    if (settings.perApp &&
+        settings.appRoutingMode == AppRoutingMode.include &&
+        settings.includedApps.isEmpty) {
+      throw const FormatException('Выберите хотя бы одно приложение для VPN');
+    }
     if (!await engine.prepare()) {
       throw const FormatException('Разрешение на VPN не получено');
     }
@@ -280,6 +285,9 @@ class AppState extends ChangeNotifier with WidgetsBindingObserver {
     for (var i = 0; i < 60; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 250));
       final snapshot = await engine.snapshot();
+      if (snapshot['error'] case final String message when message.isNotEmpty) {
+        throw FormatException(message);
+      }
       if (snapshot['state'] == expected) {
         await _poll();
         return;

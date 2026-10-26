@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'app_state.dart';
 import 'models.dart';
@@ -10,9 +11,23 @@ import 'tabs/home_tab.dart';
 import 'tabs/servers_tab.dart';
 import 'tabs/settings_tab.dart';
 import 'widgets/common.dart';
+import 'widgets/interface_scale.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  LicenseRegistry.addLicense(() async* {
+    for (final font in [
+      'inter',
+      'dynapuff',
+      'nunito',
+      'rubikone',
+      'comfortaa',
+    ]) {
+      yield LicenseEntryWithLineBreaks([
+        font,
+      ], await rootBundle.loadString('assets/licenses/$font-OFL.txt'));
+    }
+  });
   final state = AppState();
   await state.initialize();
   runApp(PlusVpnApp(state: state));
@@ -45,6 +60,10 @@ class PlusVpnApp extends StatelessWidget {
           themeMode: settings.theme,
           theme: buildPlusTheme(scheme(Brightness.light), settings),
           darkTheme: buildPlusTheme(scheme(Brightness.dark), settings),
+          builder: (context, child) => InterfaceScale(
+            scale: settings.uiScale,
+            child: child ?? const SizedBox.shrink(),
+          ),
           home: AppShell(state: state),
         );
       },
@@ -140,25 +159,27 @@ class _AppShellState extends State<AppShell> {
                   ),
                 ),
               ),
-            if (glass && state.settings.wallpaper != null)
+            if (state.settings.wallpaper != null)
               Positioned.fill(
-                child: Image.file(
-                  File(state.settings.wallpaper!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                child: RepaintBoundary(
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(
+                      sigmaX: state.settings.blur,
+                      sigmaY: state.settings.blur,
+                    ),
+                    child: Image.file(
+                      File(state.settings.wallpaper!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                    ),
+                  ),
                 ),
               ),
-            if (glass && state.settings.wallpaper != null)
+            if (state.settings.wallpaper != null)
               Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: state.settings.blur,
-                    sigmaY: state.settings.blur,
-                  ),
-                  child: ColoredBox(
-                    color: (dark ? Colors.black : Colors.white).withValues(
-                      alpha: dark ? .25 : .18,
-                    ),
+                child: ColoredBox(
+                  color: (dark ? Colors.black : Colors.white).withValues(
+                    alpha: dark ? .25 : .18,
                   ),
                 ),
               ),
