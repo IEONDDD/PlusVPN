@@ -9,12 +9,8 @@
 </p>
 
 <p align="center">
-  <a href="https://t.me/OnPlusVPN">
-    <img src="https://img.shields.io/badge/Telegram-Канал_с_обновлениями-0088cc?logo=telegram&logoColor=white" alt="Telegram" />
-  </a>
-  <a href="https://github.com/IEONDDD/PlusVPN/releases/latest">
-    <img src="https://img.shields.io/github/v/release/IEONDDD/PlusVPN?color=0088cc&logo=github&logoColor=white&label=Release" alt="Release" />
-  </a>
+  <a href="https://t.me/OnPlusVPN"><img src="https://img.shields.io/badge/Telegram-Канал_с_обновлениями-0088cc?logo=telegram&logoColor=white" alt="Telegram" /></a>
+  <a href="https://github.com/IEONDDD/PlusVPN/releases/latest"><img src="https://img.shields.io/badge/Release-v1.1.0-0088cc?logo=github&logoColor=white" alt="Release" /></a>
 </p>
 
 ---
