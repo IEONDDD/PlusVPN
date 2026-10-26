@@ -1,0 +1,23 @@
+name: plus_vpn
+description: PlusVPN — Android Xray client with Liquid Glass and Material You.
+publish_to: none
+version: 1.1.0+2
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_v2ray_client: 3.5.0
+  dynamic_color: ^1.8.1
+  palette_generator: ^0.3.3+7
+  image_picker: ^1.2.0
+  path_provider: ^2.1.5
+  shared_preferences: ^2.5.3
+  http: ^1.5.0
+  crypto: ^3.0.6
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
