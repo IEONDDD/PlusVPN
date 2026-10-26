@@ -30,48 +30,62 @@ class AppSurface extends StatelessWidget {
     }
     final dark = colors.brightness == Brightness.dark;
     final opacity = context.visuals.opacity;
-    final baseColor = modal
-        ? (dark ? const Color(0xff10161c) : Colors.white).withValues(
-            alpha: dark ? .28 : .36,
-          )
-        : (dark ? const Color(0xff0c131a) : Colors.white).withValues(
-            alpha: dark
-                ? (.12 + opacity * .6).clamp(0.12, 0.40)
-                : (.18 + opacity * .6).clamp(0.18, 0.48),
-          );
-    return RepaintBoundary(
-      child: ClipRRect(
-        borderRadius: border,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: modal ? 20 : 12,
-            sigmaY: modal ? 20 : 12,
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: border,
-              color: baseColor,
-              gradient: modal
-                  ? null
-                  : LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withValues(alpha: opacity + .05),
-                        colors.primary.withValues(alpha: opacity * .25),
-                        Colors.white.withValues(alpha: opacity * .20),
-                      ],
-                      stops: const [0, .55, 1],
-                    ),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: dark ? .17 : .52),
-                width: .8,
+    final baseAlpha = modal
+        ? (dark ? 0.38 : 0.48)
+        : (dark
+            ? (0.20 + opacity * 1.4).clamp(0.20, 0.55)
+            : (0.28 + opacity * 1.4).clamp(0.28, 0.65));
+    final gradient = modal
+        ? null
+        : LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(
+                alpha: dark ? (0.10 + opacity * 0.8) : (0.35 + opacity * 0.8),
               ),
+              (dark ? const Color(0xff141c26) : Colors.white).withValues(
+                alpha: baseAlpha * 0.85,
+              ),
+              (dark ? const Color(0xff0d131b) : const Color(0xffe4ecf7))
+                  .withValues(
+                alpha: baseAlpha,
+              ),
+            ],
+            stops: const [0.0, 0.45, 1.0],
+          );
+    final fallbackColor = modal
+        ? (dark ? const Color(0xff10161c) : Colors.white).withValues(
+            alpha: dark ? 0.35 : 0.45,
+          )
+        : null;
+    return ClipRRect(
+      borderRadius: border,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: modal ? 20 : 8,
+          sigmaY: modal ? 20 : 8,
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: border,
+            color: fallbackColor,
+            gradient: gradient,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: dark ? .18 : .52),
+              width: .8,
             ),
-            child: Material(
-              type: MaterialType.transparency,
-              child: Padding(padding: padding, child: child),
-            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: dark ? 0.22 : 0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: Padding(padding: padding, child: child),
           ),
         ),
       ),

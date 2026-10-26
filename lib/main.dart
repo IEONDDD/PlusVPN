@@ -167,10 +167,17 @@ class _AppShellState extends State<AppShell> {
                       sigmaX: state.settings.blur,
                       sigmaY: state.settings.blur,
                     ),
-                    child: Image.file(
-                      File(state.settings.wallpaper!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                    child: Transform.scale(
+                      scale: state.settings.wallpaperScale,
+                      child: Image.file(
+                        File(state.settings.wallpaper!),
+                        fit: BoxFit.cover,
+                        alignment: Alignment(
+                          state.settings.wallpaperAlignX,
+                          state.settings.wallpaperAlignY,
+                        ),
+                        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      ),
                     ),
                   ),
                 ),
@@ -187,16 +194,13 @@ class _AppShellState extends State<AppShell> {
               child: Column(
                 children: [
                   Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 260),
-                      child: KeyedSubtree(
-                        key: ValueKey(state.tab),
-                        child: switch (state.tab) {
-                          0 => HomeTab(state: state),
-                          1 => ServersTab(state: state),
-                          _ => SettingsTab(state: state),
-                        },
-                      ),
+                    child: KeyedSubtree(
+                      key: ValueKey(state.tab),
+                      child: switch (state.tab) {
+                        0 => HomeTab(state: state),
+                        1 => ServersTab(state: state),
+                        _ => SettingsTab(state: state),
+                      },
                     ),
                   ),
                   Padding(

@@ -49,6 +49,228 @@ class _SettingsTabState extends State<SettingsTab> {
     if (previous != null && previous != path && File(previous).existsSync()) {
       await File(previous).delete();
     }
+    if (mounted) {
+      await _showAreaSheet(path);
+    }
+  }
+
+  Future<void> _showAreaSheet([String? targetPath]) async {
+    final path = targetPath ?? state.settings.wallpaper;
+    if (path == null || !File(path).existsSync()) return;
+
+    var alignX = state.settings.wallpaperAlignX;
+    var alignY = state.settings.wallpaperAlignY;
+    var scale = state.settings.wallpaperScale;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: context.isGlass ? .18 : .4),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: AppSurface(
+            modal: true,
+            child: StatefulBuilder(
+              builder: (context, setSheetState) {
+                final colors = Theme.of(context).colorScheme;
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Область и позиция фона',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Если рисунок находится слева, справа или в углу, выберите нужное положение:',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Container(
+                      width: 130,
+                      height: 220,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: colors.primary.withValues(alpha: 0.6),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Transform.scale(
+                            scale: scale,
+                            child: Image.file(
+                              File(path),
+                              fit: BoxFit.cover,
+                              alignment: Alignment(alignX, alignY),
+                            ),
+                          ),
+                          Positioned(
+                            top: 6,
+                            left: 45,
+                            right: 45,
+                            height: 4,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      ActionChip(
+                        avatar: const Icon(Icons.west, size: 16),
+                        label: const Text('Слева'),
+                        onPressed: () => setSheetState(() => alignX = -1.0),
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.fiber_manual_record, size: 14),
+                        label: const Text('По центру'),
+                        onPressed: () => setSheetState(() {
+                          alignX = 0.0;
+                          alignY = 0.0;
+                        }),
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.east, size: 16),
+                        label: const Text('Справа'),
+                        onPressed: () => setSheetState(() => alignX = 1.0),
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.north, size: 16),
+                        label: const Text('Сверху'),
+                        onPressed: () => setSheetState(() => alignY = -1.0),
+                      ),
+                      ActionChip(
+                        avatar: const Icon(Icons.south, size: 16),
+                        label: const Text('Снизу'),
+                        onPressed: () => setSheetState(() => alignY = 1.0),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('По горизонтали', style: TextStyle(fontSize: 13)),
+                      Text(
+                        alignX < -0.3
+                            ? 'Слева'
+                            : alignX > 0.3
+                            ? 'Справа'
+                            : 'Центр',
+                        style: TextStyle(fontSize: 12, color: colors.primary),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: alignX,
+                    min: -1.0,
+                    max: 1.0,
+                    divisions: 20,
+                    onChanged: (v) => setSheetState(() => alignX = v),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('По вертикали', style: TextStyle(fontSize: 13)),
+                      Text(
+                        alignY < -0.3
+                            ? 'Сверху'
+                            : alignY > 0.3
+                            ? 'Снизу'
+                            : 'Центр',
+                        style: TextStyle(fontSize: 12, color: colors.primary),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: alignY,
+                    min: -1.0,
+                    max: 1.0,
+                    divisions: 20,
+                    onChanged: (v) => setSheetState(() => alignY = v),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Масштаб', style: TextStyle(fontSize: 13)),
+                      Text(
+                        '${(scale * 100).round()}%',
+                        style: TextStyle(fontSize: 12, color: colors.primary),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: scale,
+                    min: 1.0,
+                    max: 2.5,
+                    divisions: 15,
+                    onChanged: (v) => setSheetState(() => scale = v),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () async {
+                      await state.updateSettings((s) {
+                        s.wallpaperAlignX = alignX;
+                        s.wallpaperAlignY = alignY;
+                        s.wallpaperScale = scale;
+                      });
+                      if (sheetContext.mounted) Navigator.pop(sheetContext);
+                    },
+                    child: const Text('Применить'),
+                  ),
+                ],
+              ),
+            ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<Color?> _extract(String path) async =>
@@ -440,6 +662,12 @@ class _SettingsTabState extends State<SettingsTab> {
                 icon: const Icon(Icons.photo_outlined),
                 label: Text(_loadingImage ? 'Загрузка…' : 'Из галереи'),
               ),
+              if (s.wallpaper != null)
+                FilledButton.tonalIcon(
+                  onPressed: () => _showAreaSheet(),
+                  icon: const Icon(Icons.crop_outlined),
+                  label: const Text('Область'),
+                ),
               TextButton(
                 onPressed: s.wallpaper == null
                     ? null

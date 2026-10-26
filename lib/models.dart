@@ -194,6 +194,9 @@ class AppSettings {
   String subtitle = 'PlusVPN', greeting = '', word = 'breathe', dns = '1.1.1.1';
   bool useProfileDns = true;
   String? wallpaper;
+  double wallpaperAlignX = 0.0;
+  double wallpaperAlignY = 0.0;
+  double wallpaperScale = 1.0;
   double blur = 12, opacity = .06;
   ThemeMode theme = ThemeMode.dark;
   List<String> excludedApps = [];
@@ -215,6 +218,9 @@ class AppSettings {
     'dns': dns,
     'useProfileDns': useProfileDns,
     'wallpaper': wallpaper,
+    'wallpaperAlignX': wallpaperAlignX,
+    'wallpaperAlignY': wallpaperAlignY,
+    'wallpaperScale': wallpaperScale,
     'blur': blur,
     'opacity': opacity,
     'theme': theme.name,
@@ -250,6 +256,12 @@ class AppSettings {
     s.dns = j['dns'] ?? s.dns;
     s.useProfileDns = j['useProfileDns'] ?? true;
     s.wallpaper = j['wallpaper'];
+    s.wallpaperAlignX =
+        (j['wallpaperAlignX'] as num? ?? 0.0).toDouble().clamp(-1.0, 1.0);
+    s.wallpaperAlignY =
+        (j['wallpaperAlignY'] as num? ?? 0.0).toDouble().clamp(-1.0, 1.0);
+    s.wallpaperScale =
+        (j['wallpaperScale'] as num? ?? 1.0).toDouble().clamp(1.0, 3.0);
     s.blur = (j['blur'] as num? ?? 12).toDouble().clamp(0, 40);
     s.opacity = (j['opacity'] as num? ?? .06).toDouble().clamp(.02, .20);
     s.theme = ThemeMode.values.firstWhere(
