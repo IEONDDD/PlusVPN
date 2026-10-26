@@ -56,4 +56,12 @@ class VpnEngine {
       socket?.destroy();
     }
   }
+
+  static Future<bool> openUrl(String url) async {
+    try {
+      return await channel.invokeMethod<bool>('openUrl', {'url': url}) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 }

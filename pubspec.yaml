@@ -23,6 +23,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/licenses/
+    - assets/images/
   fonts:
     - family: PlusDynaPuff
       fonts:

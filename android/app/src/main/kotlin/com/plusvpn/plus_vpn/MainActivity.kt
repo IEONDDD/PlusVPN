@@ -61,6 +61,18 @@ class MainActivity : FlutterActivity() {
                                 runOnUiThread { result.success(apps) }
                             } catch (e: Exception) { runOnUiThread { result.error("APPS", e.message, null) } }
                         }
+                        "openUrl" -> {
+                            val url = call.argument<String>("url") ?: ""
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(intent)
+                                result.success(true)
+                            } catch (e: Exception) {
+                                result.error("OPEN_URL", e.message, null)
+                            }
+                        }
                         else -> result.notImplemented()
                     }
                 } catch (e: Exception) { result.error("VPN", e.message, null) }

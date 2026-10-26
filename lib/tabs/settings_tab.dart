@@ -7,6 +7,7 @@ import '../app_state.dart';
 import '../models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
+import '../services/vpn_engine.dart';
 
 class SettingsTab extends StatefulWidget {
   const SettingsTab({super.key, required this.state});
@@ -814,6 +815,64 @@ class _SettingsTabState extends State<SettingsTab> {
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: s.perApp ? _chooseApps : null,
+          ),
+        ]),
+        _section('Рекомендуем', [
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => VpnEngine.openUrl('https://t.me/vanek_vnp_bot'),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.asset(
+                    'assets/images/vanek_vpn.jpg',
+                    width: 72,
+                    height: 72,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'VANEK VPN',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '@vanek_vnp_bot',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.open_in_new_rounded,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Не реклама, а просто рекомендую как хороший сервис',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ]),
         const Center(
