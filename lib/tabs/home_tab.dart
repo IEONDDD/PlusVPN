@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
+import '../services/vpn_engine.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key, required this.state});
@@ -320,7 +321,15 @@ class _WaveButtonState extends State<WaveButton>
     final c = Theme.of(context).colorScheme;
     final foreground = context.isGlass ? c.primary : c.onPrimary;
     final button = FilledButton(
-      onPressed: s.busy || s.transitioning ? null : s.toggle,
+      onPressed: s.busy || s.transitioning
+          ? null
+          : () async {
+              final wasConnected = s.connected;
+              await s.toggle();
+              if (!wasConnected && s.connected && context.mounted) {
+                await _checkBatteryOptimization(context, s);
+              }
+            },
       style: FilledButton.styleFrom(
         shape: const StadiumBorder(),
         backgroundColor: context.isGlass
@@ -404,4 +413,58 @@ class _WavePainter extends CustomPainter {
       oldDelegate.phase != phase ||
       oldDelegate.color != color ||
       oldDelegate.connected != connected;
+}
+
+Future<void> _checkBatteryOptimization(
+  BuildContext context,
+  AppState state,
+) async {
+  if (state.settings.batteryPromptDismissed) return;
+  final ignoring = await VpnEngine.isIgnoringBatteryOptimizations();
+  if (ignoring || !context.mounted) return;
+
+  await showPlusDialog<void>(
+    context: context,
+    builder: (ctx) => PlusDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.battery_charging_full_rounded, size: 26),
+          SizedBox(width: 10),
+          Expanded(child: Text('Работа в фоне')),
+        ],
+      ),
+      content: const Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Чтобы Android не отключал VPN при выключенном экране или в спящем режиме, снимите ограничения расхода батареи для PlusVPN.',
+            style: TextStyle(fontSize: 14, height: 1.4),
+          ),
+          SizedBox(height: 12),
+          Text(
+            'В окне системы выберите «Разрешить» (или установите «Без ограничений» в настройках батареи).',
+            style: TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            state.updateSettings((s) => s.batteryPromptDismissed = true);
+            Navigator.pop(ctx);
+          },
+          child: const Text('Позже'),
+        ),
+        FilledButton(
+          onPressed: () async {
+            Navigator.pop(ctx);
+            state.updateSettings((s) => s.batteryPromptDismissed = true);
+            await VpnEngine.requestIgnoreBatteryOptimizations();
+          },
+          child: const Text('Снять ограничения'),
+        ),
+      ],
+    ),
+  );
 }

@@ -189,7 +189,7 @@ class AppSettings {
   double uiScale = .90;
   AppRoutingMode appRoutingMode = AppRoutingMode.exclude;
   bool dynamicColors = true, wallpaperColors = false, showWord = false;
-  bool perApp = false, bypassLan = true;
+  bool perApp = false, bypassLan = true, batteryPromptDismissed = false;
   int accent = 0xffc1e899;
   String subtitle = 'PlusVPN', greeting = '', word = 'breathe', dns = '1.1.1.1';
   bool useProfileDns = true;
@@ -224,6 +224,7 @@ class AppSettings {
     'blur': blur,
     'opacity': opacity,
     'theme': theme.name,
+    'batteryPromptDismissed': batteryPromptDismissed,
     'excludedApps': excludedApps,
     'includedApps': includedApps,
   };
@@ -268,6 +269,7 @@ class AppSettings {
       (e) => e.name == j['theme'],
       orElse: () => ThemeMode.dark,
     );
+    s.batteryPromptDismissed = j['batteryPromptDismissed'] ?? false;
     s.excludedApps = List<String>.from(j['excludedApps'] ?? []);
     s.includedApps = List<String>.from(j['includedApps'] ?? []);
     return s;

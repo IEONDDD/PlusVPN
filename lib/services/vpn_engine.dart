@@ -64,4 +64,20 @@ class VpnEngine {
       return false;
     }
   }
+
+  static Future<bool> isIgnoringBatteryOptimizations() async {
+    try {
+      return await channel.invokeMethod<bool>('isIgnoringBatteryOptimizations') ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  static Future<bool> requestIgnoreBatteryOptimizations() async {
+    try {
+      return await channel.invokeMethod<bool>('requestIgnoreBatteryOptimizations') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 }

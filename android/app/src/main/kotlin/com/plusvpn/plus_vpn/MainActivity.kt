@@ -3,8 +3,11 @@ package com.plusvpn.plus_vpn
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.net.VpnService
 import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -64,13 +67,38 @@ class MainActivity : FlutterActivity() {
                         "openUrl" -> {
                             val url = call.argument<String>("url") ?: ""
                             try {
-                                val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
                                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 }
                                 startActivity(intent)
                                 result.success(true)
                             } catch (e: Exception) {
                                 result.error("OPEN_URL", e.message, null)
+                            }
+                        }
+                        "isIgnoringBatteryOptimizations" -> {
+                            val pm = getSystemService(POWER_SERVICE) as? PowerManager
+                            val isIgnoring = pm?.isIgnoringBatteryOptimizations(packageName) ?: true
+                            result.success(isIgnoring)
+                        }
+                        "requestIgnoreBatteryOptimizations" -> {
+                            try {
+                                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                    data = Uri.parse("package:$packageName")
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(intent)
+                                result.success(true)
+                            } catch (e: Exception) {
+                                try {
+                                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    startActivity(intent)
+                                    result.success(true)
+                                } catch (_: Exception) {
+                                    result.error("BATTERY", e.message, null)
+                                }
                             }
                         }
                         else -> result.notImplemented()

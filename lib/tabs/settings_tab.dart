@@ -816,6 +816,48 @@ class _SettingsTabState extends State<SettingsTab> {
             trailing: const Icon(Icons.chevron_right),
             onTap: s.perApp ? _chooseApps : null,
           ),
+          FutureBuilder<bool>(
+            future: VpnEngine.isIgnoringBatteryOptimizations(),
+            builder: (context, snapshot) {
+              final isIgnoring = snapshot.data ?? true;
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  isIgnoring
+                      ? Icons.battery_charging_full_rounded
+                      : Icons.battery_alert_rounded,
+                  color: isIgnoring
+                      ? null
+                      : Theme.of(context).colorScheme.error,
+                ),
+                title: const Text('Работа при выключенном экране'),
+                subtitle: Text(
+                  isIgnoring
+                      ? 'Ограничения сняты · работает в спящем режиме'
+                      : 'Ограничения активны · Android может отключать VPN',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isIgnoring
+                        ? null
+                        : Theme.of(context).colorScheme.error,
+                  ),
+                ),
+                trailing: isIgnoring
+                    ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                    : FilledButton.tonal(
+                        onPressed: () async {
+                          await VpnEngine.requestIgnoreBatteryOptimizations();
+                          setState(() {});
+                        },
+                        child: const Text('Снять'),
+                      ),
+                onTap: () async {
+                  await VpnEngine.requestIgnoreBatteryOptimizations();
+                  setState(() {});
+                },
+              );
+            },
+          ),
         ]),
         _section('Рекомендуем', [
           InkWell(
